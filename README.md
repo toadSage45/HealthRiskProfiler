@@ -1,6 +1,32 @@
-# Health Risk Profiler
+# SDE Intern Assignment: AI-Powered Health Risk Profiler
 
-This project is a web application that analyzes health data to provide a risk profile. It consists of a React frontend and a Node.js backend.
+## Problem Statement
+
+Develop a service that analyzes lifestyle survey responses (typed or scanned forms) and generates a structured health risk profile. The intern must handle noisy inputs, missing answers, and provide guardrails for incomplete data. Output must include factors, risk level, and actionable recommendations.
+
+### Focus Area: OCR -> Factor Extraction -> Risk and Recommendations
+
+---
+
+## Submission Instructions (Backend)
+
+*   Submit a working backend demo (local with ngrok or simple cloud instance).
+*   Provide a GitHub repository containing your code.
+*   Include a README.md with setup instructions, architecture, and API usage examples.
+*   Provide sample curl/Postman requests to test your endpoints.
+*   Submit a short screen recording showing your endpoints working with sample inputs.
+
+---
+
+## Evaluation Criteria (Backend)
+
+*   Correctness of API responses and adherence to JSON schemas.
+*   Handling of both text and image inputs with OCR.
+*   Implementation of guardrails and error handling.
+*   Code organization, clarity, and reusability.
+*   Effective use of AI for chaining and validation.
+
+---
 
 ## Architecture
 
@@ -8,27 +34,29 @@ This project is a web application that analyzes health data to provide a risk pr
 
 The frontend is a single-page application built with React and Vite. It allows users to input their health data and view the risk analysis results.
 
-- **`src/App.jsx`**: The main application component.
-- **`src/components/FormComponent.jsx`**: The form for users to input their health data.
-- **`src/components/ImageUploadComponent.jsx`**: A component to upload images of health reports.
-- **`src/components/ResultsComponent.jsx`**: A component to display the risk analysis results.
-- **`src/api.js`**: A module for making API calls to the backend.
+-   **`src/App.jsx`**: The main application component.
+-   **`src/components/FormComponent.jsx`**: The form for users to input their health data.
+-   **`src/components/ImageUploadComponent.jsx`**: A component to upload images of health reports.
+-   **`src/components/ResultsComponent.jsx`**: A component to display the risk analysis results.
+-   **`src/api.js`**: A module for making API calls to the backend.
 
 ### Backend
 
 The backend is a Node.js application using Express.js. It provides a RESTful API for the frontend to consume.
 
-- **`app.js`**: The main application file.
-- **`routes.js`**: The API routes.
-- **`ai.js`**:  Handles the AI-powered analysis of the health data.
-- **`parser.js`**: Parses the health data from the uploaded reports.
-- **`risk.js`**: Calculates the health risk based on the parsed data.
+-   **`app.js`**: The main application file.
+-   **`routes.js`**: The API routes.
+-   **`ai.js`**: Handles the AI-powered analysis of the health data.
+-   **`parser.js`**: Parses the health data from the uploaded reports.
+-   **`risk.js`**: Calculates the health risk based on the parsed data.
+
+---
 
 ## Setup Instructions
 
 ### Prerequisites
 
-- Node.js and npm
+-   Node.js and npm
 
 ### Backend Setup
 
@@ -60,38 +88,91 @@ The backend is a Node.js application using Express.js. It provides a RESTful API
     npm run dev
     ```
 
+---
+
 ## API Usage
 
-The backend exposes the following API endpoints:
+The backend exposes the following API endpoint:
 
-- **`POST /api/analyze`**: Analyzes health data.
+-   **`POST /api/analyze`**: Analyzes health data from a survey form (text or image).
 
-**Example Request:**
+### Step 1: OCR/Text Parsing
+
+**Input (Text):**
+
+```bash
+curl -X POST http://localhost:3000/api/analyze \
+-H "Content-Type: application/json" \
+-d '{"age":42,"smoker":true,"exercise":"rarely","diet":"high sugar"}'
+```
+
+**Input (Image):**
+
+```bash
+curl -X POST http://localhost:3000/api/analyze \
+-F "image=@/path/to/your/survey_image.png"
+```
+
+**Expected Output (JSON):**
 
 ```json
 {
-  "age": 45,
-  "bloodPressure": {
-    "systolic": 140,
-    "diastolic": 90
+  "answers": {
+    "age": 42,
+    "smoker": true,
+    "exercise": "rarely",
+    "diet": "high sugar"
   },
-  "cholesterol": {
-    "ldl": 160,
-    "hdl": 40
-  }
+  "missing_fields": [],
+  "confidence": 0.92
 }
 ```
 
-**Example Response:**
+**Guardrail / Exit Condition (JSON):**
 
 ```json
 {
-  "riskScore": 0.75,
-  "riskLevel": "High",
+  "status": "incomplete_profile",
+  "reason": ">50% fields missing"
+}
+```
+
+### Step 2: Factor Extraction
+
+**Expected Output (JSON):**
+
+```json
+{
+  "factors": ["smoking", "poor diet", "low exercise"],
+  "confidence": 0.88
+}
+```
+
+### Step 3: Risk Classification
+
+**Expected Output (JSON):**
+
+```json
+{
+  "risk_level": "high",
+  "score": 78,
+  "rationale": ["smoking", "high sugar diet", "low activity"]
+}
+```
+
+### Step 4: Recommendations
+
+**Expected Output (JSON):**
+
+```json
+{
+  "risk_level": "high",
+  "factors": ["smoking", "poor diet", "low exercise"],
   "recommendations": [
-    "Consult a doctor",
-    "Improve diet",
-    "Increase physical activity"
-  ]
+    "Quit smoking",
+    "Reduce sugar",
+    "Walk 30 mins daily"
+  ],
+  "status": "ok"
 }
 ```
